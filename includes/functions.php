@@ -75,6 +75,17 @@ function auto_number_data($array){
     }
     return $array;
 }
+function requestInput($var,$method="GET",$else_arg=false){
+   if($method == "GET"){
+        return isset($_GET[$var]) && $_GET[$var] ? db_escape($_GET[$var]) : $else_arg;
+   }
+   elseif ($method == "POST"){
+        return isset($_POST[$var]) && $_POST[$var] ? db_escape($_POST[$var]) : $else_arg;
+   }
+   else{
+        return false;
+   }
+}
 function is_api_request(){
     return defined('IS_API_REQUEST');
 }
@@ -86,4 +97,77 @@ function get_api_key(){
 function get_api_input($key,$default=null){
     global $api_inputs;
     return isset($api_inputs[$key]) ? $api_inputs[$key] : $default;
+}
+function uploadImage($file, $prefix, $baseDir = "uploads/", $allowedTypes = ['image/jpeg', 'image/png', 'image/webp'], $maxSize = 5242880) {
+    
+    // ========== ساختار پوشه سال/ماه ==========
+    $year = date('Y');
+    $month = date('m');
+    $targetDir = $baseDir . $year . '/' . $month . '/';
+    
+    // ایجاد پوشه اگر وجود نداشته باشد
+    if (!file_exists($targetDir)) {
+        mkdir($targetDir, 0777, true);
+    }
+
+    // بررسی خطاهای آپلود
+    if ($file['error'] !== UPLOAD_ERR_OK) {
+        return [
+            'success' => false,
+            'message' => 'خطا در آپلود فایل: ' . $file['error'],
+            'response' => 400
+        ];
+    }
+
+    // بررسی نوع فایل
+    $finfo = finfo_open(FILEINFO_MIME_TYPE);
+    $mimeType = finfo_file($finfo, $file['tmp_name']);
+    finfo_close($finfo);
+
+    if (!in_array($mimeType, $allowedTypes)) {
+        return [
+            'success' => false,
+            'message' => 'نوع فایل مجاز نیست. فقط: ' . implode(', ', $allowedTypes),
+            'response' => 400
+        ];
+    }
+
+    // بررسی سایز فایل
+    if ($file['size'] > $maxSize) {
+        return [
+            'success' => false,
+            'message' => 'حجم فایل بیشتر از حد مجاز است. حداکثر: ' . ($maxSize / 1024 / 1024) . 'MB',
+            'response' => 400
+        ];
+    }
+
+    // ========== تغییرات اعمال شده ==========
+    // حفظ نام اصلی فایل با اضافه کردن پیشوند
+    $originalName = pathinfo($file['name'], PATHINFO_FILENAME);
+    $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+    $newFileName = $prefix . '-' . $originalName . '.' . $extension;
+    $targetPath = $targetDir . $newFileName;
+
+    // اگر فایل با همین نام وجود داشت، حذفش کن
+    if (file_exists($targetPath)) {
+        unlink($targetPath);
+    }
+
+    // انتقال فایل به پوشه مقصد
+    if (move_uploaded_file($file['tmp_name'], $targetPath)) {
+        return [
+            'success' => true,
+            'message' => 'تصویر با موفقیت آپلود شد',
+            'filename' => $newFileName,
+            'filepath' => $targetPath,           
+            'filesize' => $file['size'],            
+            'response' => 201
+        ];
+    } else {
+        return [
+            'success' => false,
+            'message' => 'خطا در ذخیره فایل',
+            'response' => 500
+        ];
+    }
 }

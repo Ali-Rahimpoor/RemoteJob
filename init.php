@@ -11,3 +11,4 @@ require INC_PATH . 'database.php';
 require INC_PATH . 'functions.php';
 require FUNC_PATH . 'func-router.php';
 require FUNC_PATH . 'func-database.php';
+require FUNC_PATH . 'func-users.php';
