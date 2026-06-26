@@ -93,3 +93,33 @@ function create_api_key($user_id){
     }
     return false;
 }
+function is_login(){
+    global $current_user;
+    $is_login = $current_user['ID'] ? true : false;
+    if(!$is_login) {
+        send_json([
+            'success' => false,
+            'message' => 'نیاز به احراز هویت'
+        ],401);
+    }
+}
+function get_current_user_id(){
+    is_login();
+    global $current_user;
+    return $current_user['ID'];
+}
+function get_current_user_info(){
+    is_login();
+    global $current_user;
+    $allowedData =[
+        'id' => $current_user['ID'],
+        'full_name' => $current_user['full_name'],
+        'role' => $current_user['role'],
+        'user_name' => $current_user['user_name'],
+        'avatar' => $current_user['avatar'],
+        'phone' => $current_user['phone'],
+        'email' => $current_user['email'],
+        'birthdate' => $current_user['birthdate']
+    ];
+    return $allowedData;
+}

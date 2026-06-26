@@ -106,7 +106,9 @@ function api_register_request(){
   ],201);
   
 }
-function api_upload_avatar($user_id){
+function api_upload_avatar(){
+  is_login();
+  $user_id = get_current_user_id();
   if(!$user_id){
     send_json([
       'success' => false,
@@ -145,4 +147,19 @@ function api_upload_avatar($user_id){
   ];
   send_json($data,201);
 
+}
+function api_user_info(){
+  is_login();
+  $res = get_current_user_info();
+  if(!$res){
+    send_json([
+      'success' => false,
+      'message' => 'خطایی رخ داده است',
+    ],500);
+  }
+  send_json([
+    'success' => true,
+    'message' => 'اطلاعات با موفقیت دریافت شد',
+    'data' => $res
+  ],200);
 }

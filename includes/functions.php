@@ -171,3 +171,24 @@ function uploadImage($file, $prefix, $baseDir = "uploads/", $allowedTypes = ['im
         ];
     }
 }
+function setup_api_user(){
+    $headers = getallheaders();
+    if(isset($headers['x-api-key'])){
+        $api_key = db_escape($headers['x-api-key']);
+        $sql = "SELECT * FROM application_api_keys WHERE api_key = '$api_key' AND status = 'active'";
+        $api = db_fetch_assoc($sql);
+        if($api){
+            $user_id = $api['user_id'];
+            $user = db_fetch_assoc_by('users','ID',$user_id);
+            if($user){
+                $GLOBALS['current_user'] = auto_number_data($user);    
+                // add last use
+                db_update('application_api_keys',[
+                    'last_used_at' => current_time()
+                ],[
+                    'ID' => $api['ID']
+                ]);
+            }
+        }
+    }
+}

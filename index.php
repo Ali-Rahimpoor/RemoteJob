@@ -1,7 +1,7 @@
 <?php
 require 'init.php';
 
-// setup_api();
+setup_api_user();
 
 require (ABSPATH . 'api-callbacks-loader.php');
 
