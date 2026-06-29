@@ -1,6 +1,7 @@
 <?php
 $uri = $_SERVER['REQUEST_URI'];
-$uri = substr($uri,16);
+// die($uri);
+$uri = substr($uri,27);
 $parsed = parse_url($uri);
 $uri = $parsed['path'];
 // die($uri);
