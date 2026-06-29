@@ -95,8 +95,15 @@ function create_api_key($user_id){
 }
 function is_login(){
     global $current_user;
-    $is_login = $current_user['ID'] ? true : false;
-    if(!$is_login) {
+    if($current_user){
+        $is_login = $current_user['ID'] ? true : false;
+        if(!$is_login) {
+            send_json([
+                'success' => false,
+                'message' => 'نیاز به احراز هویت'
+            ],401);
+        }
+    }else{
         send_json([
             'success' => false,
             'message' => 'نیاز به احراز هویت'
@@ -122,4 +129,19 @@ function get_current_user_info(){
         'birthdate' => $current_user['birthdate']
     ];
     return $allowedData;
+}
+function get_current_user_role(){
+    is_login();
+    global $current_user;
+    return $current_user['role'];
+}
+function is_admin(){
+    $role = get_current_user_role();
+    $is_admin = $role === 'admin'   ? true  : false ;
+    if(!$is_admin){
+        send_json([
+            'success' => false,
+            'message' => 'دسترسی غیرمجاز'
+        ],403);
+    }
 }

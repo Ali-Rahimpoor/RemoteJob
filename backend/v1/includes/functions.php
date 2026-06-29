@@ -49,6 +49,7 @@ function second_to_time($sec){
  return "$m:$s";
 }
 function autop($content){
+    if(!$content) return false;
     $content = str_replace(['\\r\\n','\\n'],PHP_EOL,$content);
     $content_lines = explode(PHP_EOL,$content);
     return '<p>' . implode('<p></p>',$content_lines) . '</p>';
