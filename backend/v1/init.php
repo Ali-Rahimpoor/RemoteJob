@@ -9,6 +9,7 @@ require INC_PATH . 'jdf.php';
 date_default_timezone_set(SITE_TIMEZONE);
 require INC_PATH . 'database.php';
 require INC_PATH . 'functions.php';
+require INC_PATH . 'validation/validation.php';
 require FUNC_PATH . 'func-router.php';
 require FUNC_PATH . 'func-database.php';
 require FUNC_PATH . 'func-users.php';

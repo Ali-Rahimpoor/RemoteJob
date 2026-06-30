@@ -1,7 +1,7 @@
 <?php
 function api_login_user(){
-  $user_name = requestInput('user_name','POST');
-  $password = md5(requestInput('password',"POST"));
+  $user_name = requestInput('user_name');
+  $password = md5(requestInput('password'));
 
   $res = db_query(" SELECT * FROM users WHERE user_name = '$user_name' AND password = '$password' ");
   if($res && $res -> num_rows){
@@ -25,71 +25,84 @@ function api_login_user(){
   ],404);
 }
 function api_register_request(){
-   // VALIDATION
-  $user_name = check_exist_user_name((requestInput('user_name',"POST")));
-  if(!$user_name){
-    send_json([
-      'success' => false,
-      'message' => 'نام کاربری از قبل وجود دارد',      
-    ],404);
+  $user_name = (requestInput('user_name'));
+  $user_role = (requestInput('user_role'));   
+  $password = (requestInput('password'));
+  $full_name = requestInput('full_name');  
+  $phone = requestInput('phone',null);  
+  $email = requestInput('email',null);  
+  $birthdate = requestInput('birthdate',null);
+  
+  $errors = [];
+  // INPUT Validation
+  if(!check_username_is_en($user_name) ){
+    $errors[] = 'نام کاربری باید انگلیسی باشد';
   }
-  $user_role = check_user_role((requestInput('user_role',"POST"))); 
-  if(!$user_role){
-    send_json([
-      'success' => false,
-      'message' => 'این نقش کاربری وجود ندارد',
-      
-    ],404);
+  if(!check_username_length($user_name)){
+    $errors[] = 'نام کاربری باید بیشتر از 3 کلمه باشد';
   }
-  $password = validate_password(requestInput('password','POST'));
-  if(!$password){
-    send_json( [
-      'success' => false,
-      'message' => 'پسورد باید شامل اعداد و حروف باشد',
-    ],404);
+  if(!check_user_role($user_role)){
+    $errors[] = 'این نقش کاربری وجود ندارد';
   }
-  $full_name = validate_fullname(requestInput('full_name',"POST"));
-  if(!$full_name){
+  if(!check_password_length($password)){
+    $errors[] = 'پسوورد باید بیشتر از 6 کلمه باشد';
+  }
+  if(!validate_password($password)){
+    $errors[] = 'پسورد باید شامل اعداد و حروف باشد';
+  }
+  if(!validate_fullname($full_name)){
+    $errors[] = 'نام و نام خانوادگی خود را وارد کنید';
+  }
+  if(!validate_phone($phone,true)){
+    $errors[] = 'شماره تلفن معتبر وارد کنید';
+  }
+  if(!validate_email($email,true)){
+    $errors[] = 'ایمیل معتبر وارد کنید';
+  }
+  if(!validate_birthdate($birthdate,true)){
+    $errors[] = 'تاریخ تولد معتبر وارد کنید';
+  }
+  // END INPUT Validation
+  if (!empty($errors)) {
     send_json([
-      'success' => false,
-      'message' => 'نام خود را خالی نزارید و اسم باید فارسی باشه',
-    ],404);
+        'success' => false,
+        'message' => 'اطلاعات ارسالی معتبر نیست.',
+        'errors' => $errors
+    ], 422);
+  }
 
+  // DATABASE Validation
+  if(!check_exist_user_name($user_name)){
+    $errors[] = 'این نام کاربری از قبل وجود دارد';
   }
-  $phone = validate_phone(requestInput('phone',"POST",null));
-  if(!$phone){
+  if(!check_phone_exists($phone,true)){
+    $errors[] = 'این شماره تلفن در سایت وجود دارد';
+  }
+  if(!check_email_exists($email,true)){
+    $errors[] = 'این ایمیل از قبل وجود دارد';
+  }
+  
+  // END DATABASE Validation
+  if (!empty($errors)) {
     send_json([
-      'success' => false,
-      'message' => 'شماره موبایل از قبل وجود دارد',
-    ],404);
+        'success' => false,
+        'message' => 'اطلاعات ارسالی معتبر نیست.',
+        'errors' => $errors
+    ], 422);
   }
-  $email = validate_email(requestInput('email',"POST",null));
-  if(!$email){
-    send_json([
-      'success' => false,
-      'message' => 'ایمیل معتبر نیست'
-    ],404);
-  }
-  $birthdate = validate_birthdate(requestInput('birthdate',"POST",null));
-  if(!$birthdate){
-    send_json([
-      'success' => false,
-      'message' => 'تاریخ تولد معتبر نیست'
-    ],404);
-  }
+
   $password = md5($password);
   $data = [
    'user_name' => $user_name,
+   'role'=> $user_role,
    'password' => $password,
    'full_name'=>$full_name,
    'phone' => $phone,
    'email' => $email,
    'birthdate'=> $birthdate,
-   'role'=> $user_role,
    'updated_at' => current_time(),
    'created_at' => current_time(),
   ];
-
   $user_id = db_insert('users',$data);
   if(!$user_id){
     send_json([
@@ -97,12 +110,11 @@ function api_register_request(){
       'message' => 'خطایی رخ داده است'
     ],500);
   }
+  unset($data['password']);
   send_json([
     'success' => true,
     'message' => 'شما با موفقیت ثبت نام شدید',
-    'data'    => [
-      'user_id' => $user_id
-    ]
+    'data'    => $data
   ],201);
   
 }
@@ -111,7 +123,7 @@ function api_upload_avatar(){
   $user_id = get_current_user_id();
   if(!$user_id){
     send_json([
-      'success' => false,
+      'successs' => false,
       'message' => 'این کاربر وجود ندارد'
     ],404);
   }
@@ -129,12 +141,12 @@ function api_upload_avatar(){
       'message' => 'فایلی دریافت نشد'
     ],404);
   }
-  $file_upload = uploadImage($file,$user_name);
-  if(!$file_upload['success']){
-    send_json($file_upload,$file_upload['response']);
+  $uploaded_image = uploadImage($file,$user_name);
+  if(!$uploaded_image['success']){
+    send_json($uploaded_image,$uploaded_image['response']);
   }
   db_update('users',[
-    'avatar' => $file_upload['filepath'],
+    'avatar' => $uploaded_image['filepath'],
     'updated_at' => current_time()
   ],[
     'ID' => $user_id
@@ -142,11 +154,10 @@ function api_upload_avatar(){
   $data = [
     'success' => true,
     'message' => 'تصویر با موفقیت جایگزین شد',
-    'avatar'  => ABSPATH . $file_upload['filepath'],
-    'file'    => $file_upload,
+    'avatar'  => site_url($uploaded_image['filepath']),
+    'file'    => $uploaded_image,
   ];
   send_json($data,201);
-
 }
 function api_user_info(){
   is_login();

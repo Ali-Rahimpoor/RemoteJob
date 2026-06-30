@@ -76,16 +76,37 @@ function auto_number_data($array){
     }
     return $array;
 }
-function requestInput($var,$method="GET",$else_arg=false){
-   if($method == "GET"){
-        return isset($_GET[$var]) && $_GET[$var] ? db_escape($_GET[$var]) : $else_arg;
-   }
-   elseif ($method == "POST"){
-        return isset($_POST[$var]) && $_POST[$var] ? db_escape($_POST[$var]) : $else_arg;
-   }
-   else{
-        return false;
-   }
+function getJsonInput(){
+    static $json = null;
+
+    if ($json === null) {
+        $json = json_decode(file_get_contents('php://input'), true);
+    }
+
+    return is_array($json) ? $json : [];
+}
+function requestInput($key, $default = false){
+    // GET
+    if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+        return isset($_GET[$key]) && trim($_GET[$key]) !== ''
+        ? trim($_GET[$key])
+        : $default;
+    }
+
+    // JSON
+    $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
+
+    if (str_contains($contentType, 'application/json')) {
+        $json = getJsonInput();
+        return isset($json[$key]) && trim($json[$key]) !== ''
+        ? trim($json[$key])
+        : $default;
+    }
+
+    // FormData یا x-www-form-urlencoded
+    // return isset($_POST[$key])
+    //     ? db_escape($_POST[$key])
+    //     : $default;
 }
 function is_api_request(){
     return defined('IS_API_REQUEST');
@@ -143,8 +164,8 @@ function uploadImage($file, $prefix, $baseDir = "uploads/", $allowedTypes = ['im
     }
 
     // ========== تغییرات اعمال شده ==========
-    // حفظ نام اصلی فایل با اضافه کردن پیشوند
-    $originalName = pathinfo($file['name'], PATHINFO_FILENAME);
+    // حفظ نام اصلی فایل با اضافه کردن پیشوند    
+    $originalName = str_replace(' ', '-', trim(pathinfo($file['name'], PATHINFO_FILENAME)));
     $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
     $newFileName = $prefix . '-' . $originalName . '.' . $extension;
     $targetPath = $targetDir . $newFileName;

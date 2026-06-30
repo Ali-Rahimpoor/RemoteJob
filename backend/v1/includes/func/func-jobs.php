@@ -22,7 +22,7 @@ CONST JOBS_SALARAIES = [
    'negotiable' => 'قابل توافق',
 ];
 CONST JOBS_STATUSES = [
-   'oending' => 'در انتظار تایید',
+   'pending' => 'در انتظار تایید',
    'publish' => 'منتشر شده',
    'expire'  => 'منقضی شده',
    'delete'  => 'حذف شده'

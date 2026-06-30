@@ -7,7 +7,7 @@ get('/jobs','api_get_jobs');
 
 // USERS
 get('user/profile','api_user_info');
-put('user/profile','api_upload_avatar');
+post('user/profile/avatar','api_upload_avatar');
 
 // AUTH
 post('/user/register','api_register_request');
