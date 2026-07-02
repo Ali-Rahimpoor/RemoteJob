@@ -89,8 +89,7 @@ function api_register_request(){
         'message' => 'اطلاعات ارسالی معتبر نیست.',
         'errors' => $errors
     ], 422);
-  }
-
+  }   
   $password = md5($password);
   $data = [
    'user_name' => $user_name,

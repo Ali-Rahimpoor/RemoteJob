@@ -138,3 +138,40 @@ function check_password_length($password){
 
     return false;
 }
+function valid_salary($salary){
+   if(array_key_exists($salary,JOBS_SALARAIES)){
+      return $salary;
+   }
+      return false;
+}
+function valid_duration($duratoin){
+   if(array_key_exists($duratoin,JOBS_DURATIONS)){
+      return $duratoin;
+   }
+      return  false;
+}
+function valid_status($status){
+   if(array_key_exists($status,JOBS_STATUSES)){
+      return $status;
+   }
+   return false;
+}
+function valid_skills($skills){
+    if (!is_array($skills) || empty($skills)) {
+        return false;
+    }
+
+    $ids = implode(',', $skills);
+
+    $count = db_fetch_column("
+        SELECT COUNT(*)
+        FROM skills
+        WHERE id IN ($ids)
+    ");
+
+    if ($count != count($skills)) {
+        return false;
+    }
+
+    return $skills;
+}

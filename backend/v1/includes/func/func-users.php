@@ -1,9 +1,4 @@
 <?php
-const USER_ROLES = [   
-   'employer',
-   'job_seeker'
-];
-
 function create_api_key($user_id){
     $api_key = generate_random_string(30);
     $expire = date('Y-m-d H:i:s', strtotime(current_time() . ' +1 month'));
@@ -48,6 +43,7 @@ function get_current_user_id(){
 function get_current_user_info(){
     is_login();
     global $current_user;
+    
     $allowedData =[
         'id' => $current_user['ID'],
         'full_name' => $current_user['full_name'],

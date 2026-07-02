@@ -22,8 +22,7 @@ function redirect($url){
    header("Location:$url");
    exit;
 }
-function generate_random_string($len=10){
-   $chars='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmopqrstuvwxyz';
+function generate_random_string($len=10,$chars='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmopqrstuvwxyz'){
    $result ='';
    for ($i=0; $i <= $len ; $i++) { 
          $random = rand(0,strlen($chars) -1);
@@ -54,27 +53,26 @@ function autop($content){
     $content_lines = explode(PHP_EOL,$content);
     return '<p>' . implode('<p></p>',$content_lines) . '</p>';
 }
-function auto_number_data($array){
-     if ($array === null || !is_array($array)) {
-        return []; 
+function auto_number_data($data){
+    if (!is_array($data)) {
+        return $data;
     }
-    if(array_is_list($array)){
-        $array = array_map(function ($item) {
-            foreach ($item as $key => $value) {                     
-                if(is_string($value) && ctype_digit($value)){
-                    $item[$key] = (int) $value;
-                }
-            }
-            return $item;
-        },$array);
-    }else{
-          foreach ($array as $key => $value) {                     
-                if(is_string($value) && ctype_digit($value)){
-                    $array[$key] = (int) $value;
-                }
-            }
+
+    foreach ($data as $key => $value) {
+
+        if (is_array($value)) {
+            $data[$key] = auto_number_data($value);
+        } elseif (
+            is_string($value) &&
+            ctype_digit($value) &&
+            $value[0] !== '0'
+        ) {
+            $data[$key] = (int) $value;
+        }
+
     }
-    return $array;
+
+    return $data;
 }
 function getJsonInput(){
     static $json = null;
@@ -85,28 +83,34 @@ function getJsonInput(){
 
     return is_array($json) ? $json : [];
 }
-function requestInput($key, $default = false){
-    // GET
-    if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-        return isset($_GET[$key]) && trim($_GET[$key]) !== ''
-        ? trim($_GET[$key])
-        : $default;
+function requestInput($key, $default = null){
+    $method = $_SERVER['REQUEST_METHOD'];
+
+    if ($method === 'GET') {
+        $data = $_GET;
+    } elseif (str_contains($_SERVER['CONTENT_TYPE'] ?? '', 'application/json')) {
+        $data = getJsonInput();
+    } elseif($method === "POST") {
+        $data = $_POST;
+    }
+    else{
+        send_json([
+            'success' => false,
+            'message' => 'متد دریافتی شناسایی نشد'
+        ],400);
     }
 
-    // JSON
-    $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
-
-    if (str_contains($contentType, 'application/json')) {
-        $json = getJsonInput();
-        return isset($json[$key]) && trim($json[$key]) !== ''
-        ? trim($json[$key])
-        : $default;
+    if (!array_key_exists($key, $data)) {
+        return $default;
     }
 
-    // FormData یا x-www-form-urlencoded
-    // return isset($_POST[$key])
-    //     ? db_escape($_POST[$key])
-    //     : $default;
+    $value = $data[$key];
+
+    if (is_string($value)) {
+        return trim($value);
+    }
+
+    return $value;
 }
 function is_api_request(){
     return defined('IS_API_REQUEST');
@@ -213,4 +217,18 @@ function setup_api_user(){
             }
         }
     }
+}
+function get_cover_url($cover_url = null){
+    if (!empty($cover_url)) {
+        return site_url($cover_url);
+    }
+
+    return site_url('img/cover.webp');
+}
+function get_avatar_url($avatar_url = null){
+    if (!empty($avatar_url)) {
+        return site_url($avatar_url);
+    }
+
+    return site_url('img/avatar.webp');
 }
