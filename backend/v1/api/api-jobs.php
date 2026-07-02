@@ -211,3 +211,51 @@ function api_put_job(){
       'message' => 'هیچ تغییری ایجاد نشد'
    ],200);
 }
+function api_get_job($slug){
+   $sql = "SELECT * FROM view_jobs WHERE status = 'publish' AND slug = '$slug'";
+   $rows = db_fetch_all($sql);
+   if (!$rows) {
+    send_json([
+        'success' => false,
+        'message' => 'صفحه مورد نظر پیدا نشد'
+    ], 404);
+   }
+   $jobs = [];
+   foreach($rows as $row){
+      $id = $row['ID'];
+      if(!isset($jobs[$id])){
+         $jobs[$id] =[
+            'ID' => $row['ID'],
+            'slug' => $row['slug'],
+            'title' => $row['title'],
+            'description' => $row['description'],
+            'status' => $row['status'],
+            'min_score'=> $row['min_score'],            
+            'cover_url' => get_cover_url($row['cover_url']),
+            'duration' => $row['duration'],
+            'salary' => $row['salary'],
+            'created_at' => $row['created_at'],
+            'skills' => [],
+            'user_fullname' => $row['user_fullname'],
+            'user_avatar' => get_avatar_url($row['user_avatar']),
+            'user_score' => $row['user_score'],            
+        ];
+      }
+      $jobs[$id]['skills'][]=[
+         'id' => $row['skill_id'],
+         'name'=> $row['skill_name']
+      ];
+   }
+   $jobs = auto_number_data(array_values($jobs));   
+   if(!$jobs){
+      send_json([
+         'success' => false,
+         'message' => 'خطایی رخ داده است'
+      ],500);
+   }
+   send_json([
+      'success' => true,
+      'message' => 'موفقیت',
+      'data'    => $jobs     
+   ],200);
+}

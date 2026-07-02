@@ -4,6 +4,10 @@
 post('/jobs','api_post_job');
 put('/jobs','api_put_job');
 get('/jobs','api_get_jobs');
+get('/jobs/{slug}','api_get_job',['slug'=>'\d+']);
+
+// PROPOSAL
+post('/jobs/{slug}/proposals', 'api_post_proposal', ['slug' => '\d+']);
 
 // SKILLS
 post('/skills','api_post_skill');

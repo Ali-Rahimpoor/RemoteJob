@@ -83,7 +83,7 @@ function getJsonInput(){
 
     return is_array($json) ? $json : [];
 }
-function requestInput($key, $default = null){
+function requestInput($key, $default = false){
     $method = $_SERVER['REQUEST_METHOD'];
 
     if ($method === 'GET') {
